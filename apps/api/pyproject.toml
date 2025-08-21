@@ -10,6 +10,9 @@ dependencies = [
     "psycopg2-binary",
     "pydantic",
     "python-multipart",
+    "python-dotenv",
+    "supabase>=2.0.0",
+    "geoalchemy2>=0.14.0",
 ]
 
 [project.optional-dependencies]
@@ -18,7 +21,9 @@ dev = [
     "pytest-asyncio",
     "httpx",
 ]
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -3,10 +3,11 @@ SpotFlow API
 Copyright (c) 2025 SpotFlow Krzysztof Poziomek
 Licensed under MIT License
 """
+from typing import List, Dict, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-
+from spotflow_api.routes import spots
 
 app = FastAPI(
     title="SpotFlow API",
@@ -25,31 +26,13 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Welcome to SpotFlow API!"}
-
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "SpotFlow API"}
 
-@app.get('/api/spots')
-async def get_spots():
-    return {
-        "spots": [
-            {
-                "id": "1",
-                "name": "Hel Peninsula",
-                "country": "Poland",
-                "sports": ["windsurfing", "kitesurfing"],
-                "difficulty": "intermediate"
-            },
-            {
-                "id": "2",
-                "name": "Tarifa",
-                "country": "Spain",
-                "sports": ["windsurfing", "kitesurfing"],
-                "difficulty": "advanced"
-            }
-        ]
-    }
+
+app.include_router(spots, prefix="/api")
+
 
 if __name__ == "__main__":
     import uvicorn
