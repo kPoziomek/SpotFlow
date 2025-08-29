@@ -1,10 +1,9 @@
-/**
- * Spots listing page with SSR
- */
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import {getSpots} from "@/lib/data/spots";
-import {SpotsGrid} from "@/components/spots/SpotsGrid";
+import {SpotsGrid} from "@/ui/spots/SpotsGrid";
 import {SpotFilters} from "@/types/types";
+import { createClient } from '@/utils/supabase/server';
 
 interface Props {
   searchParams: {
@@ -27,8 +26,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function SpotsPage({ searchParams }: Props) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-const   {country, sport, difficulty} = await searchParams
+  const { country, sport, difficulty } = await searchParams
   const filters: SpotFilters = {
     country: country,
     sport: sport,
@@ -36,26 +37,19 @@ const   {country, sport, difficulty} = await searchParams
   }
 
   try {
-    const spotsData = (await getSpots(filters)).spots
+    const spotsData = (await getSpots(filters, user?.id)).spots
+
+    const hasSearchFilters = country || sport || difficulty
+    if (hasSearchFilters && spotsData.length === 0) {
+      notFound()
+    }
+
     return (
       <div className="container">
-
-        {/* Spots Grid */}
         <SpotsGrid spots={spotsData} />
       </div>
     )
   } catch (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Error Loading Spots
-          </h1>
-          <p className="text-gray-600">
-            {error instanceof Error ? error.message : 'Something went wrong'}
-          </p>
-        </div>
-      </div>
-    )
+    notFound()
   }
 }
