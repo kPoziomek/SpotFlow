@@ -1,21 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function updateSession(request) {
+export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         getAll() {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -29,10 +29,18 @@ export async function updateSession(request) {
 
   // refreshing the auth token
   const {data: {user}} = await supabase.auth.getUser()
-  const protectedPaths = ['/auth/account','/account']
-  const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path))
+
+  // Only protect user dashboard paths, not auth paths
+  const protectedPaths = ['/user', '/favorites']
+  const isProtectedPath = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  console.log('🔍 Middleware - User:', user?.id, 'Path:', request.nextUrl.pathname, 'Protected:', isProtectedPath);
+
   if(isProtectedPath && !user) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+    console.log('🔍 Redirecting to auth');
+    return NextResponse.redirect(new URL('/spots', request.url))
   }
   return supabaseResponse
 }

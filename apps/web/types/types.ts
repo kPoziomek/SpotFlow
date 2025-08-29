@@ -11,6 +11,7 @@ export interface Spot {
   difficulty: 'beginner' | 'intermediate' | 'advanced'
   images: string[]
   created_at?: string
+  isFavorite?: boolean
 }
 
 export interface SpotFilters {
